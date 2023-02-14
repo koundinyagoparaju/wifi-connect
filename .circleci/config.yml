@@ -3,22 +3,14 @@ version: 2
 jobs:
   aarch64:
     docker:
-      - image: rust:latest
-
+      - image: cimg/rust:1.67.0
+# Read up: https://kerkour.com/rust-cross-compilation, https://www.modio.se/cross-compiling-rust-binaries-to-armv7.html
     steps:
       - checkout
-      - run: dpkg --add-architecture arm64
-      - run: apt update && apt upgrade -y
-      - run: apt install -y g++-aarch64-linux-gnu libc6-dev-arm64-cross libdbus-1-dev:arm64
-      - run: rustup target add aarch64-unknown-linux-gnu && rustup toolchain install stable-aarch64-unknown-linux-gnu
-      - run: export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
-      - run: export CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc
-      - run: export CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++
-      - run: export PKG_CONFIG_ALLOW_CROSS=1
-      - run: export PKG_CONFIG_PATH="/usr/lib/aarch64-linux-gnu/pkgconfig"
-      - run: cargo build --release --target=$TARGET
+      - run: export CROSS_CONTAINER_IN_CONTAINER=true
+      - run: cargo install cross --git https://github.com/cross-rs/cross
 
-      - run: /usr/bin/aarch64-linux-gnu-strip target/$TARGET/release/$BINARY
+      - run: cross build --release --target=$TARGET
 
       - run: |
           VERSION=$CIRCLE_TAG
