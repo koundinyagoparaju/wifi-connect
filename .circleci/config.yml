@@ -1,51 +1,50 @@
-build: &build
-  docker:
-    - image: rust:latest
-      environment:
-        BINARY: wifi-connect
-        TARGET_OS: linux
-
-  steps:
-    - checkout
-
-    - run: cargo build --release --target=$TARGET
-
-    - run: cross-strip target/$TARGET/release/$BINARY
-
-    - run: |
-        VERSION=$CIRCLE_TAG
-        if [ -z "$CIRCLE_TAG" ]; then VERSION="$CIRCLE_BRANCH-$(echo $CIRCLE_SHA1 | cut -c -7)"; fi
-        echo "VERSION=$VERSION"
-        echo "export VERSION=$VERSION" >> $BASH_ENV
-
-    - run: |
-        ARCHIVE_NAME="$BINARY-$VERSION-$TARGET_OS-$CIRCLE_JOB.tar.gz"
-        echo "ARCHIVE_NAME=$ARCHIVE_NAME"
-        echo "export ARCHIVE_NAME=$ARCHIVE_NAME" >> $BASH_ENV
-
-    - run: |
-        ARCHIVE_PATH="/tmp/dist/$ARCHIVE_NAME"
-        echo "ARCHIVE_PATH=$ARCHIVE_PATH"
-        echo "export ARCHIVE_PATH=$ARCHIVE_PATH" >> $BASH_ENV
-
-    - run: mkdir -p pack /tmp/dist
-    - run: mv target/$TARGET/release/$BINARY pack/$BINARY
-    - run: cp -R ui/build pack/ui
-    - run: tar -czvf $ARCHIVE_PATH -C pack .
-    - run: rm -rdf pack
-
-    - store_artifacts:
-        path: /tmp/dist
-        destination: /
-
 version: 2
 
 jobs:
   aarch64:
-    machine:
-      image: ubuntu-2004:current
-    resource_class: arm.large
-    <<: *build
+    docker:
+      - image: rust:latest
+
+    steps:
+      - checkout
+      - run: dpkg --add-architecture arm64
+      - run: apt update && apt upgrade -y
+      - run: apt install -y g++-aarch64-linux-gnu libc6-dev-arm64-cross libdbus-1-dev:arm64
+      - run: rustup target add aarch64-unknown-linux-gnu && rustup toolchain install stable-aarch64-unknown-linux-gnu
+      - run: export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
+      - run: export CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc
+      - run: export CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++
+      - run: export PKG_CONFIG_ALLOW_CROSS=1
+      - run: export PKG_CONFIG_PATH="/usr/lib/aarch64-linux-gnu/pkgconfig"
+      - run: cargo build --release --target=$TARGET
+
+      - run: /usr/bin/aarch64-linux-gnu-strip target/$TARGET/release/$BINARY
+
+      - run: |
+          VERSION=$CIRCLE_TAG
+          if [ -z "$CIRCLE_TAG" ]; then VERSION="$CIRCLE_BRANCH-$(echo $CIRCLE_SHA1 | cut -c -7)"; fi
+          echo "VERSION=$VERSION"
+          echo "export VERSION=$VERSION" >> $BASH_ENV
+
+      - run: |
+          ARCHIVE_NAME="$BINARY-$VERSION-$TARGET_OS-$CIRCLE_JOB.tar.gz"
+          echo "ARCHIVE_NAME=$ARCHIVE_NAME"
+          echo "export ARCHIVE_NAME=$ARCHIVE_NAME" >> $BASH_ENV
+
+      - run: |
+          ARCHIVE_PATH="/tmp/dist/$ARCHIVE_NAME"
+          echo "ARCHIVE_PATH=$ARCHIVE_PATH"
+          echo "export ARCHIVE_PATH=$ARCHIVE_PATH" >> $BASH_ENV
+
+      - run: mkdir -p pack /tmp/dist
+      - run: mv target/$TARGET/release/$BINARY pack/$BINARY
+      - run: cp -R ui/build pack/ui
+      - run: tar -czvf $ARCHIVE_PATH -C pack .
+      - run: rm -rdf pack
+
+      - store_artifacts:
+          path: /tmp/dist
+          destination: /
     environment:
       TARGET: aarch64-unknown-linux-gnu
 
