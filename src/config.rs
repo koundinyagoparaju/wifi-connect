@@ -1,4 +1,4 @@
-use clap::{App, Arg};
+use clap::{Command, Arg};
 
 use std::env;
 use std::net::Ipv4Addr;
@@ -26,10 +26,10 @@ pub struct Config {
 }
 
 pub fn get_config() -> Config {
-    let matches = App::new(crate_name!())
-        .version(crate_version!())
-        .author(crate_authors!())
-        .about(crate_description!())
+    let matches = Command::new("wifi-connect")
+        .version("4.10.0")
+        .author("Zahari Petrov")
+        .about("Easy WiFi setup for Linux devices from your mobile phone or laptop")
         .arg(
             Arg::with_name("portal-interface")
                 .short("i")
@@ -156,14 +156,14 @@ pub fn get_config() -> Config {
     let ui_directory = get_ui_directory(matches.value_of("ui-directory"));
 
     Config {
-        interface: interface,
-        ssid: ssid,
-        passphrase: passphrase,
-        gateway: gateway,
-        dhcp_range: dhcp_range,
-        listening_port: listening_port,
-        activity_timeout: activity_timeout,
-        ui_directory: ui_directory,
+        interface,
+        ssid,
+        passphrase,
+        gateway,
+        dhcp_range,
+        listening_port,
+        activity_timeout,
+        ui_directory,
     }
 }
 

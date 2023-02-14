@@ -136,13 +136,13 @@ impl Connection {
 }
 
 impl Ord for Connection {
-    fn cmp(&self, other: &Self) -> ::std::cmp::Ordering {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         i32::from(self).cmp(&i32::from(other))
     }
 }
 
 impl PartialOrd for Connection {
-    fn partial_cmp(&self, other: &Self) -> Option<::std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
@@ -315,7 +315,7 @@ fn wait(
     let mut total_time = 0;
 
     loop {
-        ::std::thread::sleep(::std::time::Duration::from_secs(1));
+        std::thread::sleep(std::time::Duration::from_secs(1));
 
         let state = connection.get_state()?;
 
@@ -346,6 +346,7 @@ fn wait(
 
 #[cfg(test)]
 mod tests {
+    use manager::NetworkManager;
     use super::super::NetworkManager;
     use super::*;
 
@@ -358,7 +359,7 @@ mod tests {
         // set environment variable $TEST_WIFI_SSID with the wifi's SSID that you want to test
         // e.g.  export TEST_WIFI_SSID="Resin.io Wifi"
         let wifi_env_var = "TEST_WIFI_SSID";
-        let connection = match ::std::env::var(wifi_env_var) {
+        let connection = match std::env::var(wifi_env_var) {
             Ok(ssid) => connections
                 .iter()
                 .filter(|c| c.settings().ssid.as_str().unwrap() == ssid)
@@ -377,22 +378,22 @@ mod tests {
             let state = connection.deactivate().unwrap();
             assert_eq!(ConnectionState::Deactivated, state);
 
-            ::std::thread::sleep(::std::time::Duration::from_secs(5));
+            std::thread::sleep(std::time::Duration::from_secs(5));
 
             let state = connection.activate().unwrap();
             assert_eq!(ConnectionState::Activated, state);
 
-            ::std::thread::sleep(::std::time::Duration::from_secs(5));
+            std::thread::sleep(std::time::Duration::from_secs(5));
         } else {
             let state = connection.activate().unwrap();
             assert_eq!(ConnectionState::Activated, state);
 
-            ::std::thread::sleep(::std::time::Duration::from_secs(5));
+            std::thread::sleep(std::time::Duration::from_secs(5));
 
             let state = connection.deactivate().unwrap();
             assert_eq!(ConnectionState::Deactivated, state);
 
-            ::std::thread::sleep(::std::time::Duration::from_secs(5));
+            std::thread::sleep(std::time::Duration::from_secs(5));
         }
     }
 }

@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use std::net::Ipv4Addr;
+use bitflags::bitflags;
 
 use errors::*;
 use dbus_nm::DBusNetworkManager;
@@ -172,7 +173,7 @@ pub fn new_wifi_device<'a>(
 ) -> WiFiDevice<'a> {
     WiFiDevice {
         dbus_manager: Rc::clone(dbus_manager),
-        device: device,
+        device,
     }
 }
 
@@ -184,9 +185,9 @@ fn get_access_point(manager: &DBusNetworkManager, path: &str) -> Result<Option<A
 
         let access_point = AccessPoint {
             path: path.to_string(),
-            ssid: ssid,
-            strength: strength,
-            security: security,
+            ssid,
+            strength,
+            security,
         };
 
         Ok(Some(access_point))

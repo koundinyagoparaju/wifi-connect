@@ -143,11 +143,11 @@ impl DBusNetworkManager {
         }
 
         Ok(ConnectionSettings {
-            kind: kind,
-            id: id,
-            uuid: uuid,
-            ssid: ssid,
-            mode: mode,
+            kind,
+            id,
+            uuid,
+            ssid,
+            mode,
         })
     }
 
@@ -493,7 +493,7 @@ where
 
 fn verify_ascii_password(password: &str) -> Result<&str> {
     match AsciiStr::from_ascii(password) {
-        Err(e) => Err(e).chain_err(|| ErrorKind::PreSharedKey("Not an ASCII password".into())),
+        Err(e) => Err(e).chain_err(|| ErrorKind::PreSharedKey("Not an ASCII password".into_string())),
         Ok(p) => {
             if p.len() < 8 {
                 bail!(ErrorKind::PreSharedKey(format!(

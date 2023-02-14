@@ -23,8 +23,8 @@ impl Device {
         Ok(Device {
             dbus_manager: Rc::clone(dbus_manager),
             path: path.to_string(),
-            interface: interface,
-            device_type: device_type,
+            interface,
+            device_type,
         })
     }
 
@@ -277,7 +277,7 @@ fn wait(device: &Device, target_state: &DeviceState, timeout: u64) -> Result<Dev
     let mut total_time = 0;
 
     loop {
-        ::std::thread::sleep(::std::time::Duration::from_secs(1));
+        std::thread::sleep(std::time::Duration::from_secs(1));
 
         let state = device.get_state()?;
 
@@ -308,6 +308,7 @@ fn wait(device: &Device, target_state: &DeviceState, timeout: u64) -> Result<Dev
 
 #[cfg(test)]
 mod tests {
+    use manager::NetworkManager;
     use super::super::NetworkManager;
 
     use super::*;
@@ -330,22 +331,22 @@ mod tests {
             let state = device.disconnect().unwrap();
             assert_eq!(DeviceState::Disconnected, state);
 
-            ::std::thread::sleep(::std::time::Duration::from_secs(5));
+            std::thread::sleep(std::time::Duration::from_secs(5));
 
             let state = device.connect().unwrap();
             assert_eq!(DeviceState::Activated, state);
 
-            ::std::thread::sleep(::std::time::Duration::from_secs(5));
+            std::thread::sleep(std::time::Duration::from_secs(5));
         } else {
             let state = device.connect().unwrap();
             assert_eq!(DeviceState::Activated, state);
 
-            ::std::thread::sleep(::std::time::Duration::from_secs(5));
+            std::thread::sleep(std::time::Duration::from_secs(5));
 
             let state = device.disconnect().unwrap();
             assert_eq!(DeviceState::Disconnected, state);
 
-            ::std::thread::sleep(::std::time::Duration::from_secs(5));
+            std::thread::sleep(std::time::Duration::from_secs(5));
         }
     }
 }

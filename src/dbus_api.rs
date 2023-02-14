@@ -1,7 +1,10 @@
-use dbus::Connection as DBusConnection;
-use dbus::{BusType, ConnPath, Message, Path};
+use std::time::Duration;
+
+use dbus::{Message, Path};
 use dbus::arg::{Array, Get, Iter, RefArg, Variant};
-use dbus::stdintf::OrgFreedesktopDBusProperties;
+use dbus::blocking::{BlockingSender, Connection as DBusConnection, Proxy};
+use dbus::blocking::stdintf::org_freedesktop_dbus::Properties;
+use dbus::channel::{BusType, Channel};
 
 use errors::*;
 
@@ -21,15 +24,15 @@ impl DBusApi {
         method_retry_error_names: &'static [&'static str],
         method_timeout: Option<u64>,
     ) -> Self {
-        let connection = DBusConnection::get_private(BusType::System).unwrap();
+        let connection = DBusConnection::from(Channel::get_private(BusType::System).unwrap()).unwrap();
 
         let method_timeout = method_timeout.unwrap_or(DEFAULT_TIMEOUT);
 
         DBusApi {
-            connection: connection,
-            method_timeout: method_timeout,
-            base: base,
-            method_retry_error_names: method_retry_error_names,
+            connection,
+            method_timeout,
+            base,
+            method_retry_error_names,
         }
     }
 
@@ -84,7 +87,7 @@ impl DBusApi {
                 interface, method, retries,
             );
 
-            ::std::thread::sleep(::std::time::Duration::from_secs(1));
+            std::thread::sleep(Duration::from_secs(1));
         }
     }
 
@@ -102,14 +105,14 @@ impl DBusApi {
                 }
 
                 self.send_message_checked(message)
-            },
+            }
             Err(details) => Some(Err(ErrorKind::DBusAPI(details).into())),
         }
     }
 
     fn send_message_checked(&self, message: Message) -> Option<Result<Message>> {
         match self.connection
-            .send_with_reply_and_block(message, self.method_timeout as i32 * 1000)
+            .send_with_reply_and_block(message, Duration::from_secs(self.method_timeout))
         {
             Ok(response) => Some(Ok(response)),
             Err(e) => {
@@ -125,13 +128,13 @@ impl DBusApi {
                 }
 
                 Some(Err(Error::from(e)))
-            },
+            }
         }
     }
 
     pub fn property<T>(&self, path: &str, interface: &str, name: &str) -> Result<T>
-    where
-        DBusApi: VariantTo<T>,
+        where
+            DBusApi: VariantTo<T>,
     {
         let property_error = |details: &str, err: bool| {
             let message = format!(
@@ -159,23 +162,23 @@ impl DBusApi {
                     None => property_error("no details", false),
                 };
                 Err(e).chain_err(|| dbus_err)
-            },
+            }
         }
     }
 
     pub fn extract<'a, T>(&self, response: &'a Message) -> Result<T>
-    where
-        T: Get<'a>,
+        where
+            T: Get<'a>,
     {
         response
             .get1()
-            .ok_or_else(|| ErrorKind::DBusAPI("Wrong response type".into()).into())
+            .ok_or_else(|| ErrorKind::DBusAPI("Wrong response type".into_string()).into())
     }
 
     pub fn extract_two<'a, T1, T2>(&self, response: &'a Message) -> Result<(T1, T2)>
-    where
-        T1: Get<'a>,
-        T2: Get<'a>,
+        where
+            T1: Get<'a>,
+            T2: Get<'a>,
     {
         let (first, second) = response.get2();
 
@@ -188,9 +191,8 @@ impl DBusApi {
         bail!(ErrorKind::DBusAPI("Wrong response type".into()))
     }
 
-    fn with_path<'a, P: Into<Path<'a>>>(&'a self, path: P) -> ConnPath<&'a DBusConnection> {
-        self.connection
-            .with_path(self.base, path, self.method_timeout as i32 * 1000)
+    fn with_path<'a, P: Into<Path<'a>>>(&'a self, path: P) -> Proxy<&'a DBusConnection> {
+        self.connection.with_proxy(self.base, path, Duration::from_secs(self.method_timeout))
     }
 }
 
@@ -263,8 +265,8 @@ impl VariantTo<Vec<u8>> for DBusApi {
 }
 
 pub fn extract<'a, T>(var: &mut Variant<Iter<'a>>) -> Result<T>
-where
-    T: Get<'a>,
+    where
+        T: Get<'a>,
 {
     var.0
         .get::<T>()
@@ -285,7 +287,7 @@ pub fn variant_iter_to_vec_u8(var: &mut Variant<Iter>) -> Result<Vec<u8>> {
 }
 
 pub fn path_to_string(path: &Path) -> Result<String> {
-    if let Ok(slice) = path.as_cstr().to_str() {
+    if let Ok(slice) = path.into_cstring().to_str() {
         Ok(slice.to_string())
     } else {
         bail!(ErrorKind::DBusAPI(format!(

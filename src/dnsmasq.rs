@@ -7,6 +7,7 @@ use network_manager::Device;
 
 use errors::*;
 use config::Config;
+use device::Device;
 
 pub fn start_dnsmasq(config: &Config, device: &Device) -> Result<Child> {
     let args = [

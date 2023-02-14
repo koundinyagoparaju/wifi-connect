@@ -6,15 +6,16 @@ use std::error::Error;
 use std::net::Ipv4Addr;
 use std::collections::HashSet;
 
-use network_manager::{AccessPoint, AccessPointCredentials, Connection, ConnectionState,
-                      Connectivity, Device, DeviceState, DeviceType, NetworkManager, Security,
-                      ServiceState};
-
 use errors::*;
 use exit::{exit, trap_exit_signals, ExitResult};
 use config::Config;
+use connection::{Connection, ConnectionState};
+use device::{Device, DeviceState, DeviceType};
 use dnsmasq::{start_dnsmasq, stop_dnsmasq};
+use manager::{Connectivity, NetworkManager};
 use server::start_server;
+use service::ServiceState;
+use wifi::{AccessPoint, AccessPointCredentials, Security};
 
 pub enum NetworkCommand {
     Activate,
@@ -496,7 +497,7 @@ fn wait_for_connectivity(manager: &NetworkManager, timeout: u64) -> Result<bool>
             return Ok(false);
         }
 
-        ::std::thread::sleep(::std::time::Duration::from_secs(1));
+        thread::sleep(Duration::from_secs(1));
 
         total_time += 1;
 

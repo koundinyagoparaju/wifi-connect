@@ -5,6 +5,9 @@ extern crate tokio_timer;
 
 use std::str::FromStr;
 use std::time::Duration;
+use dbus::arg::messageitem::Props;
+use dbus::ffidisp::{BusType, Connection, ConnectionItem};
+use dbus::strings::{Interface, Member};
 use self::dbus::{BusType, Connection, ConnectionItem, Interface, Member, Message, Path, Props};
 use self::dbus::arg::{Dict, Iter, Variant};
 use self::futures::Future;

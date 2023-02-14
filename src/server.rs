@@ -92,9 +92,9 @@ macro_rules! get_request_state {
 
 fn exit_with_error<E>(state: &RequestSharedState, e: E, e_kind: ErrorKind) -> IronResult<Response>
 where
-    E: ::std::error::Error + Send + 'static,
+    E: std::error::Error + Send + 'static,
 {
-    let description = e_kind.description().into();
+    let description = e_kind.description().into_string();
     let err = Err::<Response, E>(e).chain_err(|| e_kind);
     exit(&state.exit_tx, err.unwrap_err());
     Err(IronError::new(
@@ -134,10 +134,10 @@ pub fn start_server(
     let exit_tx_clone = exit_tx.clone();
     let gateway_clone = gateway;
     let request_state = RequestSharedState {
-        gateway: gateway,
-        server_rx: server_rx,
-        network_tx: network_tx,
-        exit_tx: exit_tx,
+        gateway,
+        server_rx,
+        network_tx,
+        exit_tx,
     };
 
     let mut router = Router::new();
@@ -166,7 +166,7 @@ pub fn start_server(
     if let Err(e) = Iron::new(chain).http(&address) {
         exit(
             &exit_tx_clone,
-            ErrorKind::StartHTTPServer(address, e.description().into()).into(),
+            ErrorKind::StartHTTPServer(address, e.to_string()).into(),
         );
     }
 }
@@ -209,9 +209,9 @@ fn connect(req: &mut Request) -> IronResult<Response> {
     let request_state = get_request_state!(req);
 
     let command = NetworkCommand::Connect {
-        ssid: ssid,
-        identity: identity,
-        passphrase: passphrase,
+        ssid,
+        identity,
+        passphrase,
     };
 
     if let Err(e) = request_state.network_tx.send(command) {

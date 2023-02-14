@@ -1,5 +1,3 @@
-use network_manager;
-
 use network;
 
 error_chain! {

@@ -22,6 +22,9 @@ extern crate persistent;
 extern crate router;
 extern crate serde_json;
 extern crate staticfile;
+extern crate dbus;
+extern crate bitflags;
+extern crate ascii;
 
 mod errors;
 mod config;
@@ -54,7 +57,7 @@ use privileges::require_root;
 
 fn main() {
     if let Err(ref e) = run() {
-        let stderr = &mut ::std::io::stderr();
+        let stderr = &mut std::io::stderr();
         let errmsg = "Error writing to stderr";
 
         writeln!(stderr, "\x1B[1;31mError: {}\x1B[0m", e).expect(errmsg);
