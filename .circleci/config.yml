@@ -1,16 +1,20 @@
-version: 2
+version: 2.1
 
 jobs:
   aarch64:
-    docker:
-      - image: cimg/rust:1.67.0
+    machine:
+      image: ubuntu-2004:current
 # Read up: https://kerkour.com/rust-cross-compilation, https://www.modio.se/cross-compiling-rust-binaries-to-armv7.html
     steps:
       - checkout
+      - run: sudo apt-get update && sudo apt-get install -y wget
+      - run: sudo mkdir -m777 /opt/rust /opt/cargo
+      - run: export RUSTUP_HOME=/opt/rust && export CARGO_HOME=/opt/cargo && export PATH=/opt/cargo/bin:$PATH
+      - run: wget --https-only --secure-protocol=TLSv1_2 -O- https://sh.rustup.rs | sh /dev/stdin -y
       - run: export CROSS_CONTAINER_IN_CONTAINER=true
       - run: cargo install cross --git https://github.com/cross-rs/cross
 
-      - run: cross build --release --target=$TARGET
+      - run: cross build --release --target=$TARGET --verbose
 
       - run: |
           VERSION=$CIRCLE_TAG

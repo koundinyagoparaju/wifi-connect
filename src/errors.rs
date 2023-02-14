@@ -13,10 +13,6 @@ error_chain! {
         DBus(::dbus::Error);
     }
 
-    links {
-        NetworkManager(network_manager::errors::Error, network_manager::errors::ErrorKind);
-    }
-
     errors {
         RecvAccessPointSSIDs {
             description("Receiving access point SSIDs failed")
