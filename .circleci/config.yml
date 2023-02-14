@@ -1,7 +1,6 @@
 build: &build
   docker:
-    - image: majorz/rust-$CIRCLE_JOB:rust-1.24.1
-
+    - image: rust:latest
       environment:
         BINARY: wifi-connect
         TARGET_OS: linux
@@ -43,6 +42,9 @@ version: 2
 
 jobs:
   aarch64:
+    machine:
+      image: ubuntu-2004:current
+    resource_class: arm.large
     <<: *build
     environment:
       TARGET: aarch64-unknown-linux-gnu
