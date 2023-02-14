@@ -8,6 +8,9 @@ error_chain! {
         Recv(::std::sync::mpsc::RecvError);
         SendNetworkCommand(::std::sync::mpsc::SendError<network::NetworkCommand>);
         Nix(::nix::Error);
+        Ascii(::ascii::AsAsciiStrError);
+        Utf8(::std::str::Utf8Error);
+        DBus(::dbus::Error);
     }
 
     links {
@@ -103,6 +106,27 @@ error_chain! {
             description("Root privileges required")
             display("You need root privileges to run {}", app)
         }
+
+        NetworkManager(info: String) {
+            description("NetworkManager error")
+            display("NetworkManager failure: {}", info)
+        }
+
+        SSID(info: String) {
+            description("Invalid SSID")
+            display("{}", info)
+        }
+
+        PreSharedKey(info: String) {
+            description("Invalid Pre-Shared-Key")
+            display("{}", info)
+        }
+
+        DBusAPI(info: String) {
+            description("D-Bus API error")
+            display("D-Bus failure: {}", info)
+        }
+        Service
     }
 }
 
